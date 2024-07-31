@@ -5,21 +5,27 @@ body {
     align-items: center;
     margin: 0;
     padding: 20px;
-    background-color: #87CEFA; /* Light blue background */
+    background-color: #2E2E2E; /* Dark background */
     color: white; /* White text color */
 }
 
 h1 {
     margin-bottom: 20px;
+    color: #FFD700; /* Gold color */
 }
 
 form {
+    display: flex;
+    justify-content: center;
     margin-bottom: 20px;
 }
 
 #cityInput {
     padding: 10px;
     font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    margin-right: 10px;
 }
 
 button {
@@ -39,33 +45,57 @@ button:hover {
 #forecast {
     margin-top: 20px;
     padding: 20px;
-    border: 1px solid #ccc;
     border-radius: 10px;
-    width: 300px;
-    background-color: rgba(255, 255, 255, 0.2); /* Transparent white background */
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 90%; /* Wider width for better alignment */
+    max-width: 600px; /* Limit max width */
+    background-color: rgba(255, 255, 255, 0.1); /* Transparent white background */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); /* Darker shadow */
     text-align: center;
+}
+
+.forecast-section {
+    margin-bottom: 20px;
 }
 
 .forecast-item {
-    display: inline-block;
-    width: 100px;
-    margin: 10px;
-    text-align: center;
-    border-bottom: 1px solid #ccc; /* Divider between forecast items */
-    padding-bottom: 10px; /* Spacing between forecast items */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.2); /* Slightly more opaque for contrast */
+    border-radius: 10px;
 }
 
 .forecast-icon {
-    width: 40px;
-    height: 40px;
+    width: 50px; /* Larger icon size */
+    height: 50px;
 }
 
 h2 {
     margin: 0 0 10px 0;
     font-size: 1.5em;
+    color: #FFD700; /* Gold color for headings */
 }
 
 p {
     margin: 5px 0;
+}
+
+.forecast-item strong {
+    color: #FFD700; /* Gold color for dates and times */
+}
+
+.forecast-item img {
+    margin-right: 15px;
+}
+
+.forecast-details {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.forecast-details span {
+    display: block;
+    margin-top: 5px;
 }

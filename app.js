@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
     const apiKey = "5HkzQuJ6pAxHcBLrMtc9CAc8k4ifysiO"; // Replace with your actual API key
+    const aqiApiKey = "YOUR_OPENWEATHERMAP_API_KEY"; // Replace with your AQI API key
     const form = document.getElementById("cityForm");
     const forecastDiv = document.getElementById("forecast");
 
@@ -17,9 +18,13 @@ document.addEventListener("DOMContentLoaded", function() {
             .then(data => {
                 if (data && data.length > 0) {
                     const locationKey = data[0].Key;
+                    const latitude = data[0].GeoPosition.Latitude;
+                    const longitude = data[0].GeoPosition.Longitude;
+
                     fetchCurrentWeather(locationKey);
                     fetchDailyForecast(locationKey);
                     fetchHourlyForecast(locationKey);
+                    fetchAirQuality(latitude, longitude); // Fetch AQI
                 } else {
                     forecastDiv.innerHTML = `<p>City not found.</p>`;
                 }
@@ -48,20 +53,6 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     }
 
-    function displayCurrentWeather(currentWeather) {
-        const currentContent = `
-            <h2>Current Weather</h2>
-            <div class="forecast-item">
-                <strong>${currentWeather.LocalObservationDateTime}</strong><br>
-                <img src="https://developer.accuweather.com/sites/default/files/${currentWeather.WeatherIcon < 10 ? '0' : ''}${currentWeather.WeatherIcon}-s.png" alt="${currentWeather.WeatherText}" class="forecast-icon"><br>
-                Temperature: ${currentWeather.Temperature.Metric.Value}°C<br>
-                ${currentWeather.WeatherText}
-            </div>`;
-        
-        // Add the current weather content at the top
-        forecastDiv.innerHTML = currentContent + '<hr>' + forecastDiv.innerHTML;
-    }
-
     function fetchDailyForecast(locationKey) {
         const dailyUrl = `http://dataservice.accuweather.com/forecasts/v1/daily/5day/${locationKey}?apikey=${apiKey}`;
 
@@ -78,22 +69,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.error("Error fetching daily forecast data:", error);
                 forecastDiv.innerHTML += `<p>Error fetching daily forecast data.</p>`;
             });
-    }
-
-    function displayDailyForecast(dailyForecasts) {
-        let dailyContent = `<h2>Daily Forecast</h2>`;
-        dailyForecasts.forEach(forecast => {
-            const iconUrl = `https://developer.accuweather.com/sites/default/files/${forecast.Day.Icon < 10 ? '0' : ''}${forecast.Day.Icon}-s.png`;
-            dailyContent += `
-                <div class="forecast-item">
-                    <strong>${new Date(forecast.Date).toLocaleDateString()}</strong><br>
-                    <img src="${iconUrl}" alt="${forecast.Day.IconPhrase}" class="forecast-icon"><br>
-                    Max: ${forecast.Temperature.Maximum.Value}°C<br>
-                    Min: ${forecast.Temperature.Minimum.Value}°C<br>
-                    ${forecast.Day.IconPhrase}
-                </div>`;
-        });
-        forecastDiv.innerHTML += '<hr>' + dailyContent;
     }
 
     function fetchHourlyForecast(locationKey) {
@@ -114,18 +89,104 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     }
 
+    function fetchAirQuality(lat, lon) {
+        const aqiUrl = `http://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${aqiApiKey}`;
+
+        fetch(aqiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.list && data.list.length > 0) {
+                    displayAirQuality(data.list[0].main.aqi);
+                } else {
+                    forecastDiv.innerHTML += `<p>No air quality data available.</p>`;
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching air quality data:", error);
+                forecastDiv.innerHTML += `<p>Error fetching air quality data.</p>`;
+            });
+    }
+
+    function displayCurrentWeather(currentWeather) {
+        const currentContent = `
+            <div class="forecast-section">
+                <h2>Current Weather</h2>
+                <div class="forecast-item">
+                    <img src="https://developer.accuweather.com/sites/default/files/${currentWeather.WeatherIcon < 10 ? '0' : ''}${currentWeather.WeatherIcon}-s.png" alt="${currentWeather.WeatherText}" class="forecast-icon">
+                    <div class="forecast-details">
+                        <strong>${currentWeather.LocalObservationDateTime}</strong>
+                        <span>Temperature: ${currentWeather.Temperature.Metric.Value}°C</span>
+                        <span>${currentWeather.WeatherText}</span>
+                    </div>
+                </div>
+            </div>`;
+        
+        forecastDiv.innerHTML = currentContent + forecastDiv.innerHTML;
+    }
+
+    function displayDailyForecast(dailyForecasts) {
+        let dailyContent = `<div class="forecast-section"><h2>Daily Forecast</h2>`;
+        dailyForecasts.forEach(forecast => {
+            const iconUrl = `https://developer.accuweather.com/sites/default/files/${forecast.Day.Icon < 10 ? '0' : ''}${forecast.Day.Icon}-s.png`;
+            dailyContent += `
+                <div class="forecast-item">
+                    <img src="${iconUrl}" alt="${forecast.Day.IconPhrase}" class="forecast-icon">
+                    <div class="forecast-details">
+                        <strong>${new Date(forecast.Date).toLocaleDateString()}</strong>
+                        <span>Max: ${forecast.Temperature.Maximum.Value}°C</span>
+                        <span>Min: ${forecast.Temperature.Minimum.Value}°C</span>
+                        <span>${forecast.Day.IconPhrase}</span>
+                    </div>
+                </div>`;
+        });
+        dailyContent += '</div>';
+        forecastDiv.innerHTML += dailyContent;
+    }
+
     function displayHourlyForecast(hourlyForecasts) {
-        let hourlyContent = `<h2>Hourly Forecast</h2>`;
+        let hourlyContent = `<div class="forecast-section"><h2>Hourly Forecast</h2>`;
         hourlyForecasts.forEach(forecast => {
             const iconUrl = `https://developer.accuweather.com/sites/default/files/${forecast.WeatherIcon < 10 ? '0' : ''}${forecast.WeatherIcon}-s.png`;
             hourlyContent += `
                 <div class="forecast-item">
-                    <strong>${new Date(forecast.DateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong><br>
-                    <img src="${iconUrl}" alt="${forecast.IconPhrase}" class="forecast-icon"><br>
-                    Temp: ${forecast.Temperature.Value}°C<br>
-                    ${forecast.IconPhrase}
+                    <img src="${iconUrl}" alt="${forecast.IconPhrase}" class="forecast-icon">
+                    <div class="forecast-details">
+                        <strong>${new Date(forecast.DateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                        <span>Temp: ${forecast.Temperature.Value}°C</span>
+                        <span>${forecast.IconPhrase}</span>
+                    </div>
                 </div>`;
         });
-        forecastDiv.innerHTML += '<hr>' + hourlyContent;
+        hourlyContent += '</div>';
+        forecastDiv.innerHTML += hourlyContent;
+    }
+
+    function displayAirQuality(aqi) {
+        const aqiContent = `
+            <div class="forecast-section">
+                <h2>Air Quality Index (AQI)</h2>
+                <div class="forecast-item">
+                    <strong>AQI: ${aqi}</strong>
+                    <span>Category: ${getAqiCategory(aqi)}</span>
+                </div>
+            </div>`;
+        forecastDiv.innerHTML += aqiContent;
+    }
+
+    function getAqiCategory(aqi) {
+        switch (aqi) {
+            case 1:
+                return 'Good';
+            case 2:
+                return 'Fair';
+            case 3:
+                return 'Moderate';
+            case 4:
+                return 'Poor';
+            case 5:
+                return 'Very Poor';
+            default:
+                return 'Unknown';
+        }
     }
 });
